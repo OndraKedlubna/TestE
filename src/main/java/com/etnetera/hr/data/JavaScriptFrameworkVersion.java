@@ -9,7 +9,6 @@ import java.time.LocalDate;
  * Simple data entity describing basic properties of every version of javascript Framework.
  *
  * @author Etnetera
- *
  */
 @Entity
 public class JavaScriptFrameworkVersion {
@@ -25,7 +24,6 @@ public class JavaScriptFrameworkVersion {
     private LocalDate deprecationDate;
 
     @ManyToOne
-
     @JoinColumn(name="name", nullable=false)
     private JavaScriptFramework framework;
 

@@ -1,12 +1,11 @@
 package com.etnetera.hr.controller;
 
+import com.etnetera.hr.data.JavaScriptFrameworkUpdateDto;
 import com.etnetera.hr.data.JavaScriptFrameworkVersion;
 import com.etnetera.hr.repository.JavaScriptFrameworkVersionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.repository.query.Param;
+import org.springframework.web.bind.annotation.*;
 
 import com.etnetera.hr.data.JavaScriptFramework;
 import com.etnetera.hr.repository.JavaScriptFrameworkRepository;
@@ -22,7 +21,6 @@ import java.util.Optional;
 @RestController
 public class JavaScriptFrameworkController {
 
-    //TODO 1 rozsireni entity, 2 vytvoreni framevorku, 4 mazani frameworku, 5 vyhledavani frameworku
     // 3 uprava frameworku, ,
     private final JavaScriptFrameworkRepository repository;
 
@@ -35,23 +33,55 @@ public class JavaScriptFrameworkController {
     }
 
     @GetMapping("/frameworks")
-    public Iterable<JavaScriptFramework> frameworks() {
+    public Iterable<JavaScriptFramework> getFrameworks() {
         return repository.findAll();
     }
 
     @GetMapping("/framework/{name}")
-    public JavaScriptFramework framework(String name) {
+    public JavaScriptFramework getFramework(@RequestParam String name) {
         return repository.findByName(name);
     }
 
     @PostMapping("/framework")
-    public void framework(JavaScriptFramework javaScriptFramework) {
+    public void saveFramework(JavaScriptFramework javaScriptFramework) {
         repository.save(javaScriptFramework);
     }
 
     @DeleteMapping("/framework/{name}")
-    public void deleteFramework(String name) {
+    public void deleteFramework(@RequestParam String name) {
         repository.deleteByName(name);
+    }
+
+    @PutMapping("/framework/{name}")
+    public void updateFramework(@RequestParam String name, JavaScriptFrameworkUpdateDto updateDto) {
+        JavaScriptFramework frameworkToUpdate = repository.findByName(name);
+        if (frameworkToUpdate != null) {
+            frameworkToUpdate.setHypeLevel(updateDto.getHypeLevel());
+            repository.save(frameworkToUpdate);
+        }
+    }
+
+    @PostMapping("/framework/{name}/version/")
+    public void addVersion(@RequestParam String name, JavaScriptFrameworkVersion version) {
+        JavaScriptFramework frameworkToUpdate = repository.findByName(name);
+        if (frameworkToUpdate != null) {
+            frameworkToUpdate.getVersions().add(version);
+            version.setFramework(frameworkToUpdate);
+            repository.save(frameworkToUpdate);
+        }
+    }
+
+    @DeleteMapping("/framework/{name}/{versionName}/")
+    public void removeVersion(@RequestParam String name, @RequestParam String versionNumber) {
+        JavaScriptFramework frameworkToUpdate = repository.findByName(name);
+        if (frameworkToUpdate != null) {
+            for(JavaScriptFrameworkVersion version : frameworkToUpdate.getVersions()){
+                if (version.getVersionNumber().equals(versionNumber)){
+                    frameworkToUpdate.getVersions().remove(version);
+                    version.setFramework(null);
+                }
+            }
+        }
     }
 
 }

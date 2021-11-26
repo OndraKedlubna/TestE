@@ -1,6 +1,7 @@
 package com.etnetera.hr.controller;
 
 import com.etnetera.hr.data.JavaScriptFramework;
+import com.etnetera.hr.data.JavaScriptFrameworkUpdateDto;
 import com.etnetera.hr.data.JavaScriptFrameworkVersion;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -13,7 +14,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 @RunWith(SpringRunner.class)
@@ -26,8 +26,8 @@ public class JavaScriptFrameworkControllerTest {
 
     @Test
     public void frameworksPost() {
-        javaScriptFrameworkController.framework(createTestFramework());
-        Iterable<JavaScriptFramework> frameworks = javaScriptFrameworkController.frameworks();
+        javaScriptFrameworkController.saveFramework(createTestFramework());
+        Iterable<JavaScriptFramework> frameworks = javaScriptFrameworkController.getFrameworks();
         Assert.assertThat(frameworks,
                 Matchers.contains(
                         Matchers.allOf(
@@ -45,8 +45,8 @@ public class JavaScriptFrameworkControllerTest {
 
     @Test
     public void frameworkGetOne() {
-        javaScriptFrameworkController.framework(createTestFramework());
-        JavaScriptFramework framework = javaScriptFrameworkController.framework("framework 1");
+        javaScriptFrameworkController.saveFramework(createTestFramework());
+        JavaScriptFramework framework = javaScriptFrameworkController.getFramework("framework 1");
         Assert.assertThat(framework,
                 Matchers.allOf(
                         Matchers.hasProperty("name", Matchers.equalTo("framework 1")),
@@ -63,15 +63,15 @@ public class JavaScriptFrameworkControllerTest {
 
     @Test
     public void frameworkGetOneEmpty() {
-        javaScriptFrameworkController.framework(createTestFramework());
-        JavaScriptFramework framework = javaScriptFrameworkController.framework("ss");
+        javaScriptFrameworkController.saveFramework(createTestFramework());
+        JavaScriptFramework framework = javaScriptFrameworkController.getFramework("ss");
         Assert.assertNull(framework);
     }
 
     @Test
     public void frameworkDelete() {
-        javaScriptFrameworkController.framework(createTestFramework());
-        JavaScriptFramework framework = javaScriptFrameworkController.framework("framework 1");
+        javaScriptFrameworkController.saveFramework(createTestFramework());
+        JavaScriptFramework framework = javaScriptFrameworkController.getFramework("framework 1");
         Assert.assertThat(framework,
                 Matchers.allOf(
                         Matchers.hasProperty("name", Matchers.equalTo("framework 1")),
@@ -85,8 +85,67 @@ public class JavaScriptFrameworkControllerTest {
                 )
         );
         javaScriptFrameworkController.deleteFramework("framework 1");
-        JavaScriptFramework deletedFramework = javaScriptFrameworkController.framework("framework 1");
+        JavaScriptFramework deletedFramework = javaScriptFrameworkController.getFramework("framework 1");
         Assert.assertNull(deletedFramework);
+    }
+
+    @Test
+    public void frameworkUpdate() {
+        javaScriptFrameworkController.saveFramework(createTestFramework());
+        javaScriptFrameworkController.updateFramework("framework 1", createUpdateDto());
+        JavaScriptFramework framework = javaScriptFrameworkController.getFramework("framework 1");
+        Assert.assertThat(framework,
+                Matchers.allOf(
+                        Matchers.hasProperty("name", Matchers.equalTo("framework 1")),
+                        Matchers.hasProperty("versions", Matchers.contains(
+                                Matchers.allOf(
+                                        Matchers.hasProperty("versionNumber", Matchers.equalTo("1.0.0")),
+                                        Matchers.hasProperty("deprecationDate", Matchers.equalTo(LocalDate.of(2012, 1, 1)))
+                                )
+                        )),
+                        Matchers.hasProperty("hypeLevel", Matchers.equalTo("Minimal"))
+                )
+        );
+
+    }
+
+    @Test
+    public void frameworkAddVersion() {
+        javaScriptFrameworkController.saveFramework(createTestFramework());
+        javaScriptFrameworkController.addVersion("framework 1", createTestVersion());
+        JavaScriptFramework framework = javaScriptFrameworkController.getFramework("framework 1");
+        Assert.assertThat(framework,
+                Matchers.allOf(
+                        Matchers.hasProperty("name", Matchers.equalTo("framework 1")),
+                        Matchers.hasProperty("versions", Matchers.contains(
+                                Matchers.allOf(
+                                        Matchers.hasProperty("versionNumber", Matchers.equalTo("1.0.0")),
+                                        Matchers.hasProperty("deprecationDate", Matchers.equalTo(LocalDate.of(2012, 1, 1)))
+                                ),
+                                Matchers.allOf(
+                                        Matchers.hasProperty("versionNumber", Matchers.equalTo("1.1.0")),
+                                        Matchers.hasProperty("deprecationDate", Matchers.equalTo(LocalDate.of(2012, 6, 1)))
+                                )
+                        )),
+                        Matchers.hasProperty("hypeLevel", Matchers.equalTo("MEDIUM"))
+                )
+        );
+
+    }
+
+    @Test
+    public void frameworkRemoveVersion() {
+        javaScriptFrameworkController.saveFramework(createTestFramework());
+        javaScriptFrameworkController.removeVersion("framework 1", "1.0.0");
+        JavaScriptFramework framework = javaScriptFrameworkController.getFramework("framework 1");
+        Assert.assertThat(framework,
+                Matchers.allOf(
+                        Matchers.hasProperty("name", Matchers.equalTo("framework 1")),
+                        Matchers.hasProperty("versions", Matchers.emptyIterable()),
+                        Matchers.hasProperty("hypeLevel", Matchers.equalTo("MEDIUM"))
+                )
+        );
+
     }
 
     private JavaScriptFramework createTestFramework() {
@@ -101,6 +160,19 @@ public class JavaScriptFrameworkControllerTest {
         version.setFramework(framework);
         framework.setVersions(versions);
         return framework;
+    }
+
+    private JavaScriptFrameworkUpdateDto createUpdateDto() {
+        JavaScriptFrameworkUpdateDto updateDto = new JavaScriptFrameworkUpdateDto();
+        updateDto.setHypeLevel("Minimal");
+        return updateDto;
+    }
+
+    private JavaScriptFrameworkVersion createTestVersion(){
+        JavaScriptFrameworkVersion version = new JavaScriptFrameworkVersion();
+        version.setVersionNumber("1.1.0");
+        version.setDeprecationDate(LocalDate.of(2012, 6, 1));
+        return version;
     }
 
 }
