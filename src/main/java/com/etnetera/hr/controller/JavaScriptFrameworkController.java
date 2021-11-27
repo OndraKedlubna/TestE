@@ -21,15 +21,11 @@ import java.util.Optional;
 @RestController
 public class JavaScriptFrameworkController {
 
-    // 3 uprava frameworku, ,
     private final JavaScriptFrameworkRepository repository;
 
-    private final JavaScriptFrameworkVersionRepository versionRepository;
-
     @Autowired
-    public JavaScriptFrameworkController(JavaScriptFrameworkRepository repository, JavaScriptFrameworkVersionRepository versionRepository) {
+    public JavaScriptFrameworkController(JavaScriptFrameworkRepository repository) {
         this.repository = repository;
-        this.versionRepository = versionRepository;
     }
 
     @GetMapping("/frameworks")
