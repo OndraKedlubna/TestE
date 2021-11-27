@@ -3,6 +3,7 @@
 **/bin/
 /.gradle/
 /.idea/
+/out/
 **/*.iml
 /.tomcatplugin
 /target/
